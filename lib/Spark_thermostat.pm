@@ -69,12 +69,21 @@ hook 'before' => sub {
     var relay_color => '"Green"';
   }
 
-  var tempMode_status => "Cold";	
-  var tempMode_color => '"blue"';
-  if ($last_data[5] eq "heat") {
-    var tempMode_status => "Heat";
+  if ($last_data[5] eq "Hot") {
+    var tempMode_status => "Hot";
     var tempMode_color => '"red"';
+  } elsif ($last_data[5] eq "Neither") {
+    var tempMode_status => "Neither";
+    var tempMode_color => '"gray"';
+  } elsif ($last_data[5] eq "Cold") {
+    var tempMode_status => "Cold";	
+    var tempMode_color => '"blue"';
+  } else {
+    var tempMode_status => "WTF";	
+    var tempMode_color => '"green"';
   }
+
+
 
   my $dt = DateTime::Format::ISO8601->parse_datetime($last_data[0]) or die $!;	
   $dt->set_time_zone('UTC');
