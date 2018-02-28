@@ -18,6 +18,7 @@ parser$add_argument("-f", "--folder", type="character",
 # otherwise if options not found on command line then set defaults, 
 args <- parser$parse_args()
 
+#check for folder existance
 if (is.null(args$folder)) {
   print("Expected one parameter: a target folder for the images, see usage data`.");
   parser$print_help();
@@ -28,7 +29,7 @@ if (is.null(args$folder)) {
 # Plotting
 ###############################################################################
 
-dir.create(args$folder[1], showWarnings = FALSE)
+dir.create(args$folder, showWarnings = FALSE)
 
 library(ggplot2)
 library(BerginskiRMisc)
@@ -52,12 +53,12 @@ tempPlot = ggplot(temp,aes(x=Time)) +
   theme_berginski() +
   coord_cartesian(ylim=c(30,100)) +
   scale_x_continuous("Time (days ago)",breaks = c(0:7), expand=c(0,0)) +
-  theme(text = element_text(size=6), legend.margin = unit(0,"cm"),
-	axis.title.x=element_text(margin=margin(1.5,0,0,0)),
-	axis.title.y=element_text(margin=margin(0,1.5,0,0)))
+  theme(text = element_text(size=6),
+        axis.title.x=element_text(margin=margin(1.5,0,0,0)),
+        axis.title.y=element_text(margin=margin(0,1.5,0,0)))
 
 ggsave(file.path(args$folder,'week.jpg'),tempPlot,width=4.25,height=2)
-system(paste("convert -trim ", file.path(args$folder,'week.jpg'), file.path(args$folder,'week.jpg')))
+trimImage(file.path(args$folder,'week.jpg'))
 
 tempDay = subset(temp, Time < 1);
 tempDay$Time = seq(along=tempDay$Time,from=24,to=0)
@@ -68,4 +69,4 @@ tempPlotDay = tempPlotDay +
   scale_x_continuous("Time (hours ago)", breaks = c(0:24), expand=c(0,0))
 
 ggsave(file.path(args$folder,'day.jpg'),tempPlotDay,width=4.25,height=2)
-system(paste("convert -trim ", file.path(args$folder,'day.jpg'), file.path(args$folder,'day.jpg')))
+trimImage(file.path(args$folder,'day.jpg'))
