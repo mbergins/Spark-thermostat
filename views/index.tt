@@ -6,10 +6,13 @@ $(document).ready(function() {
 			if($('#mode').val() == 'Ramp') {
 				$('#ramp-controls').show(); 
 				$('#const-controls').hide(); 
-			} else {
+			} else if($('#mode').val() == 'Constant') {
 				$('#ramp-controls').hide(); 
 				$('#const-controls').show(); 
-			} 
+			} else {
+				$('#ramp-controls').hide(); 
+				$('#const-controls').hide(); 
+			}
 			});
 		});
 </script>
@@ -58,6 +61,7 @@ $(document).ready(function() {
 						<select id="mode" class="form-control" name="mode">
 							<option>Constant</option>
 							<option>Ramp</option>
+							<option>Turn Off</option>
 						</select>
 					</div>
 				</div>

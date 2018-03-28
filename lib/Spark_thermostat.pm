@@ -83,8 +83,6 @@ hook 'before' => sub {
     var tempMode_color => '"green"';
   }
 
-
-
   my $dt = DateTime::Format::ISO8601->parse_datetime($last_data[0]) or die $!;	
   $dt->set_time_zone('UTC');
   $dt->set_time_zone('local');
@@ -123,6 +121,8 @@ post '/' => sub {
         not(params->{'rampTime'} eq '')) {
         &setRampMode(params->{'rampStart'},params->{'rampEnd'},params->{'rampTime'});
       }
+    } elsif (params->{'mode'} eq 'Turn Off') {
+      &turnOff;
     }
 
     $password_info{update_message} = 'Success, mode updated.';
@@ -163,6 +163,16 @@ sub setConstMode {
   # warning $command;
   system("$command > /dev/null 2> /dev/null");
 }
+
+sub turnOff {
+  my %cmd_props = %spark_core_props;
+  $cmd_props{cmd} = "turnOff";
+
+  my $command = &makeSparkFuncRequest(%cmd_props);	
+  # warning $command;
+  system("$command > /dev/null 2> /dev/null");
+}
+
 
 sub setRampMode {
   my ($rampStartTemp,$rampEndTemp,$rampDays) = @_;
