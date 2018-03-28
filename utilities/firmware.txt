@@ -31,8 +31,8 @@ const int outTempPin = A7;
 //mode 2 is ramp mode
 int modeSta = 1;
 
-//Temp mode state, should either be "hot" or "cold"
-String tempMode = "cold";
+//Temp mode state, should either be "Hot", "Cold" or "Neither"
+String tempMode = "Neither";
 
 //Ramp variables
 double rampSta = millis();
@@ -48,17 +48,22 @@ double rampEnd = 55;
 double tarTemp = 68;
 unsigned long lastOffT = 0;
 unsigned long curT = 0;
-//Ten minutes (in milliseconds)
+//Twenty minutes (in milliseconds)
 unsigned int minOffTime = 20*60*1000; 
 
 double temp = 0.0;
 double tempOut = 0.0;
+//Variable to track the temp when one of the relay was activated
+double tempAtStart = 0.0;
 
 char tempInfo[622];
 
 double fracThroughRamp = 0;
 
-bool outsideTarget;
+bool outsideTar;
+
+bool controlOn = 1;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Main Program
@@ -68,11 +73,14 @@ void setup() {
   pinMode(hotPin, OUTPUT);
   pinMode(coldPin, OUTPUT);
   
-  Particle.variable("tempInfo", tempInfo, STRING);
-  Particle.variable("outsideTar", outsideTarget);
-
+  Particle.variable("tempInfo", tempInfo);
+  Particle.variable("tempAtStart", tempAtStart);
+  Particle.variable("outsideTar", outsideTar);
+  
+  
   Particle.function("setConstMode", setConstMode);
   Particle.function("setRampMode", setRampMode);
+  Particle.function("turnOff", turnOff);
 
   //Take control of LED
   //RGB.control(true);
@@ -87,7 +95,6 @@ void loop() {
         //tempOut = tempOut + 1.6;
         //temp = temp + 1.6;
     }
-    curT = millis();
     
     if (modeSta == 2) {
         fracThroughRamp = ((millis() - rampSta)/(double)(rampDays*millisInDay));
@@ -106,24 +113,24 @@ void loop() {
     
     bool longEnough = (millis() - lastOffT) > minOffTime || (millis() < minOffTime && lastOffT == 0);
     
-    outsideTarget = abs(temp - tarTemp) > (tempTolerance/2);
-    
-    //Logic for temp controls
-    if (outsideTarget && longEnough) {
-        if (temp < tarTemp) {
+    if (controlOn & tempMode.equals("Hot")) {
+        if (temp < tarTemp + tempTolerance/4) {
             digitalWrite(hotPin, HIGH);
-            tempMode = "Hot";
-            relayOn = 1;
-        } else if (temp > tarTemp) {
-            digitalWrite(coldPin, HIGH);
-            tempMode = "Cold";
+            digitalWrite(coldPin, LOW);
             relayOn = 1;
         } else {
-            digitalWrite(coldPin, LOW);
-            digitalWrite(hotPin, LOW);
+            tempMode = "Neither";
         }
-    } else {
-        tempMode = "Neither";
+        
+    } else if (controlOn & tempMode.equals("Cold")) {
+        if (temp > tarTemp - tempTolerance/4) {
+            digitalWrite(coldPin, HIGH);
+            digitalWrite(hotPin, LOW);
+            relayOn = 1;
+        } else {
+            tempMode = "Neither";
+        }
+    } else if (controlOn & tempMode.equals("Neither")) {
         digitalWrite(coldPin, LOW);
         digitalWrite(hotPin, LOW);
 
@@ -131,7 +138,56 @@ void loop() {
             lastOffT = millis();    
         }
         relayOn = 0;
+        
+        if (controlOn && longEnough) {
+            if (temp < tarTemp - tempTolerance/2) {
+                tempMode = "Hot";
+                relayOn = 1;
+            }
+            if (temp > tarTemp + tempTolerance/2) {
+                tempMode = "Cold";
+                relayOn = 1;
+            }
+        }
+    } else {
+        //Not sure how we would get here, but just in case
+        digitalWrite(coldPin, LOW);
+        digitalWrite(hotPin, LOW);
+
+        relayOn = 0;
+        tempMode = "Neither";
     }
+    
+    //double tempDiff = tarTemp - temp;
+    //outsideTar = abs(tempDiff) > (tempTolerance/2);
+    
+    //Logic for temp controls
+    //if (outsideTar && longEnough && controlOn) {
+    //    if (relayOn == 0) {
+    //        tempAtStart = temp;
+    //    }
+
+    //    if (temp < tarTemp) {
+    //        digitalWrite(hotPin, HIGH);
+    //        digitalWrite(coldPin, LOW);
+    //        tempMode = "Hot";
+    //        relayOn = 1;
+    //    } else if (temp > tarTemp) {
+    //        digitalWrite(coldPin, HIGH);
+    //        digitalWrite(hotPin, LOW);
+    //        tempMode = "Cold";
+    //        relayOn = 1;
+    //    }
+    //} else {
+    //    tempMode = "Neither";
+    //    digitalWrite(coldPin, LOW);
+    //    digitalWrite(hotPin, LOW);
+
+    //    if (relayOn == 1) {
+    //        lastOffT = millis();    
+    //    }
+    //    relayOn = 0;
+    //}
     
     //Control the LED to indicate the current beer temp
     //if (temp > tarTemp) {
@@ -142,8 +198,8 @@ void loop() {
     //double fracFromTarget = 255*(fabs(temp - tarTemp)/(tempTolerance/2));
     //RGB.brightness((int)fracFromTarget);
     
-    //Only update everything once every second
-    delay(1000);
+    //Only update everything once every five seconds
+    delay(5000);
     
     sprintf(tempInfo,
             "{\"temp\":%0.1f,\"tempOut\":%0.1f,\"targetTemp\":%0.1f,\"relayOn\":%d,\"rampFrac\":%0.2f,\
@@ -191,10 +247,8 @@ double getTempReading(int sensor_pin, double correction) {
 //Constant Mode Controls
 int setConstMode(String args) {
     modeSta = 1;
+    controlOn = 1;
     
-    //char * params = new char[args.length() + 1];
-    //strcpy(params, args.c_str());
-    //tarTemp = atof(params);
     tarTemp = atof(args.c_str());
     return 1;
 }
@@ -210,15 +264,23 @@ int setRampMode(String args) {
     args.toCharArray(copyStr,64);
     char *p = strtok(copyStr, ",");
     
+    controlOn = 1;
+    
     rampStart = atof(p);
     p = strtok(NULL,",");
     rampEnd = atof(p);
     p = strtok(NULL,",");
     rampDays = atof(p);
 
-
     modeSta = 2;
+    controlOn = 1;
     rampSta = millis();
     
+    return 1;
+}
+
+//Turn off control
+int turnOff(String args) {
+    controlOn = 0;
     return 1;
 }
