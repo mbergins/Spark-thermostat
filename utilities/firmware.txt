@@ -62,6 +62,7 @@ double fracThroughRamp = 0;
 
 bool outsideTar;
 
+//Logical for whether or not the thermostat controls the temp, used to turn off the freezer
 bool controlOn = 1;
 
 
@@ -111,8 +112,6 @@ void loop() {
         tarTemp = round(tarTemp*(double)10)/(double)10;
     }
     
-    bool longEnough = (millis() - lastOffT) > minOffTime || (millis() < minOffTime && lastOffT == 0);
-    
     if (controlOn & tempMode.equals("Hot")) {
         if (temp < tarTemp + tempTolerance/4) {
             digitalWrite(hotPin, HIGH);
@@ -139,6 +138,8 @@ void loop() {
         }
         relayOn = 0;
         
+        bool longEnough = (millis() - lastOffT) > minOffTime || (millis() < minOffTime && lastOffT == 0);
+        
         if (controlOn && longEnough) {
             if (temp < tarTemp - tempTolerance/2) {
                 tempMode = "Hot";
@@ -157,57 +158,17 @@ void loop() {
         relayOn = 0;
         tempMode = "Neither";
     }
-    
-    //double tempDiff = tarTemp - temp;
-    //outsideTar = abs(tempDiff) > (tempTolerance/2);
-    
-    //Logic for temp controls
-    //if (outsideTar && longEnough && controlOn) {
-    //    if (relayOn == 0) {
-    //        tempAtStart = temp;
-    //    }
 
-    //    if (temp < tarTemp) {
-    //        digitalWrite(hotPin, HIGH);
-    //        digitalWrite(coldPin, LOW);
-    //        tempMode = "Hot";
-    //        relayOn = 1;
-    //    } else if (temp > tarTemp) {
-    //        digitalWrite(coldPin, HIGH);
-    //        digitalWrite(hotPin, LOW);
-    //        tempMode = "Cold";
-    //        relayOn = 1;
-    //    }
-    //} else {
-    //    tempMode = "Neither";
-    //    digitalWrite(coldPin, LOW);
-    //    digitalWrite(hotPin, LOW);
-
-    //    if (relayOn == 1) {
-    //        lastOffT = millis();    
-    //    }
-    //    relayOn = 0;
-    //}
-    
-    //Control the LED to indicate the current beer temp
-    //if (temp > tarTemp) {
-    //    RGB.color(255, 0, 0);
-    //} else {
-    //    RGB.color(0, 0, 255);
-    //}
-    //double fracFromTarget = 255*(fabs(temp - tarTemp)/(tempTolerance/2));
-    //RGB.brightness((int)fracFromTarget);
-    
     //Only update everything once every five seconds
     delay(5000);
     
     sprintf(tempInfo,
             "{\"temp\":%0.1f,\"tempOut\":%0.1f,\"targetTemp\":%0.1f,\"relayOn\":%d,\"rampFrac\":%0.2f,\
             \"mode\":%d,\"rampStartTime\":%0.f,\"rampStartTemp\":%0.1f,\"rampEndTemp\":%0.1f,\
-            \"rampDays\":%0.10f,\"tempMode\":\"%s\"}",
+            \"rampDays\":%0.10f,\"tempMode\":\"%s\",\"controlOn\":\"%d\"}",
             temp,tempOut,tarTemp,relayOn,fracThroughRamp,
             modeSta,rampSta,rampStart,rampEnd,
-            rampDays,tempMode.c_str());
+            rampDays,tempMode.c_str(),controlOn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
