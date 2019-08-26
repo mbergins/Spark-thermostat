@@ -44,15 +44,18 @@ temp$Relay = temp$Relay * temp$Time;
 temp$Relay[temp$Relay == 0] = NA;
 
 tempPlot = ggplot(temp,aes(x=Time)) + 
-  geom_vline(aes(xintercept = Relay),size=0.1,alpha=0.25) +
+  geom_vline(aes(xintercept = Relay, color=tempMode),size=0.1,alpha=0.25) +
   geom_line(aes(y=Target_temp,color="Target"),alpha=0.5) +
   geom_line(aes(y=Freezer_temp,color="Freezer"),alpha=0.9) +
   geom_line(aes(y=Outside_Temp,color="Outside"),alpha=0.9) + 
-  scale_color_brewer("",type = "qual",palette = "Dark2") +
+  # scale_color_brewer("",type = "qual",palette = "Dark2") +
   ylab('Temperature (°F)') +
   theme_berginski() +
   coord_cartesian(ylim=c(30,100)) +
   scale_x_continuous("Time (days ago)",breaks = c(0:7), expand=c(0,0)) +
+  scale_color_manual(values = c("Blue","Red","White","LightBlue","Green","Gray10"), 
+                     limits = c("Cold","Hot","Neither","Freezer","Outside","Target")) +
+  labs(color = "") +
   theme(text = element_text(size=6),
         axis.title.x=element_text(margin=margin(1.5,0,0,0)),
         axis.title.y=element_text(margin=margin(0,1.5,0,0)))
