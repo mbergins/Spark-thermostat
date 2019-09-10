@@ -160,7 +160,7 @@ sub setConstMode {
   $cmd_props{cmd} = "setConstMode";
 
   my $command = &makeSparkFuncRequest(%cmd_props);	
-  # warning $command;
+  warning $command;
   system("$command > /dev/null 2> /dev/null");
 }
 
@@ -169,7 +169,7 @@ sub turnOff {
   $cmd_props{cmd} = "turnOff";
 
   my $command = &makeSparkFuncRequest(%cmd_props);	
-  # warning $command;
+  warning $command;
   system("$command > /dev/null 2> /dev/null");
 }
 
@@ -182,14 +182,14 @@ sub setRampMode {
   $cmd_props{cmd} = "setRampMode";
 
   my $command = &makeSparkFuncRequest(%cmd_props);	
-  # warning $command;
+  warning $command;
   system("$command > /dev/null 2> /dev/null");
 }
 
 sub makeSparkFuncRequest {
   my %props = @_;
 
-  my $command = "curl --silent \"https://api.spark.io/v1/devices/$props{device_ID}/$props{cmd}\"";
+  my $command = "curl --silent \"https://api.particle.io/v1/devices/$props{device_ID}/$props{cmd}\"";
   $command .= " -d access_token=$props{access_token}";
   if (defined $props{args}) {
     $command .= " -d 'args=$props{args}'";
