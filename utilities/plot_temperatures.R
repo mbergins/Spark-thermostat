@@ -40,25 +40,19 @@ library(grid)
 
 temp = read.csv('last_week.csv') %>%
   mutate(myTime = ymd_hms(Time, tz="EST") + hours(1)) %>%
+  mutate(relayTime = ifelse(Relay == 1, myTime, NA)) %>%
   arrange(desc(myTime))
 
-#missing values throw an error with ggplot, replacing missing vals with 0
-temp$Relay[is.na(temp$Relay)] = 0;
-temp$Relay = temp$Relay * temp$Time;
-temp$Relay[temp$Relay == 0] = NA;
-
-tempPlot = ggplot(temp,aes(x=myTime)) +
-  geom_vline(aes(xintercept = Relay, color=tempMode),size=0.1,alpha=0.25) +
-  geom_line(aes(y=Target_temp,color="Target"),alpha=0.5) +
-  geom_line(aes(y=Freezer_temp,color="Freezer"),alpha=0.9) +
-  geom_line(aes(y=Outside_Temp,color="Outside"),alpha=0.9) +
-  # scale_color_brewer("",type = "qual",palette = "Dark2") +
+tempPlot = ggplot(temp,aes(x = myTime)) +
+  geom_vline(aes(xintercept = relayTime, color = tempMode), size = 0.1,alpha = 0.1) +
+  geom_line(aes(y=Target_temp,color = "Target"), alpha = 0.5) +
+  geom_line(aes(y=Freezer_temp,color = "Freezer"), alpha = 0.9) +
+  geom_line(aes(y=Outside_Temp,color = "Outside"), alpha = 0.9) +
   ylab('Temperature (°F)') +
   xlab('Time') +
   theme_berginski() +
-  coord_cartesian(ylim=c(30,100)) +
-  scale_x_datetime() +
-  # scale_x_continuous("Time (days ago)",breaks = c(0:7), expand=c(0,0)) +
+  coord_cartesian(ylim = c(30,100)) +
+  scale_x_datetime(date_breaks = "1 day") +
   scale_color_manual(values = c("Blue","Red","White","LightBlue","Green","Gray10"),
                      limits = c("Cold","Hot","Neither","Freezer","Outside","Target")) +
   labs(color = "") +
@@ -76,5 +70,5 @@ tempDay = temp %>%
 tempPlotDay = tempPlot %+% tempDay +
   scale_x_datetime(date_breaks = "1 hour", date_labels = '%H')
 
-ggsave(file.path(args$folder,'day.jpg'),tempPlotDay,width=4.25,height=2)
-trimImage(file.path(args$folder,'day.jpg'))
+ggsave(file.path(args$folder, 'day.jpg'), tempPlotDay, width=4.25, height=2)
+trimImage(file.path(args$folder, 'day.jpg'))
