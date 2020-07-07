@@ -37,6 +37,7 @@ library(lubridate)
 library(tidyverse)
 library(BerginskiRMisc)
 library(grid)
+library(scales)
 
 temp = read.csv('last_week.csv') %>%
   mutate(myTime = ymd_hms(Time, tz="EST") + hours(1)) %>%
@@ -52,7 +53,7 @@ tempPlot = ggplot(temp,aes(x = myTime)) +
   xlab('Time') +
   theme_berginski() +
   coord_cartesian(ylim = c(30,100)) +
-  scale_x_datetime(date_breaks = "1 day") +
+  scale_x_datetime(date_breaks = "1 day",labels = date_format("%d/%m/%y")) +
   scale_color_manual(values = c("Blue","Red","White","LightBlue","Green","Gray10"),
                      limits = c("Cold","Hot","Neither","Freezer","Outside","Target")) +
   labs(color = "") +
