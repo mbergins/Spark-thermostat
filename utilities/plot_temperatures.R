@@ -34,9 +34,10 @@ dir.create(args$folder, showWarnings = FALSE)
 
 library(ggplot2)
 library(lubridate)
-library(tidyverse)
-library(BerginskiRMisc)
+library(dplyr)
+#library(BerginskiRMisc)
 library(grid)
+library(scales)
 
 temp = read.csv('last_week.csv') %>%
   mutate(myTime = ymd_hms(Time, tz="EST") + hours(1)) %>%
@@ -50,19 +51,28 @@ tempPlot = ggplot(temp,aes(x = myTime)) +
   geom_line(aes(y=Outside_Temp,color = "Outside"), alpha = 0.9) +
   ylab('Temperature (°F)') +
   xlab('Time') +
-  theme_berginski() +
+  #theme_berginski() +
   coord_cartesian(ylim = c(30,100)) +
-  scale_x_datetime(date_breaks = "1 day") +
+  scale_x_datetime(date_breaks = "1 day", labels = date_format("%d/%m/%y")) +
   scale_color_manual(values = c("Blue","Red","White","LightBlue","Green","Gray10"),
                      limits = c("Cold","Hot","Neither","Freezer","Outside","Target")) +
   labs(color = "") +
   theme(text = element_text(size=6),
         axis.title.x=element_text(margin=margin(1.5,0,0,0)),
+        axis.title.y=element_text(margin=margin(0,1.5,0,0))) +
+  theme(panel.grid = element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_line(color='black'),
+        axis.text = element_text(color='black'),
+        axis.title.x=element_text(margin=margin(1.5,0,0,0)),
         axis.title.y=element_text(margin=margin(0,1.5,0,0)))
 
 
+
 ggsave(file.path(args$folder,'week.jpg'),tempPlot,width=4.25,height=2)
-trimImage(file.path(args$folder,'week.jpg'))
+#trimImage(file.path(args$folder,'week.jpg'))
 
 tempDay = temp %>%
   filter(myTime >= max(temp$myTime,na.rm=T) - days(1))
@@ -71,4 +81,4 @@ tempPlotDay = tempPlot %+% tempDay +
   scale_x_datetime(date_breaks = "1 hour", date_labels = '%H')
 
 ggsave(file.path(args$folder, 'day.jpg'), tempPlotDay, width=4.25, height=2)
-trimImage(file.path(args$folder, 'day.jpg'))
+#trimImage(file.path(args$folder, 'day.jpg'))
