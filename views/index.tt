@@ -23,6 +23,7 @@ $(document).ready(function() {
 		<div class="row">
 			<div class="col-md-12">
 				<h1>Thermostat Monitoring</h1>
+                <p><a href='/calculators'>Calculators</a>
 			</div>
 		</div>
 	</div>
