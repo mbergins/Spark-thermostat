@@ -55,6 +55,7 @@ angular.module('beerCalcs', []).controller('CalcsController', function() {
 		<div class="row">
 			<div class="col-md-12">
 				<h1>Beer Calculators</h1>
+                <p><a href="/">Home Page</a>
 			</div>
 		</div>
 	</div>
