@@ -130,7 +130,20 @@ post '/' => sub {
     $password_info{update_message} = 'Password doesn\'t match, no change made in settings.<br/>';
   }
   
-  redirect '/';
+  template 'index', { 
+    freezer_temp => vars->{last_data}[1],
+    outside_temp => vars->{last_data}[2],
+    target_temp => vars->{last_data}[4],
+    relay_status => vars->{relay_status},
+    relay_color => vars->{relay_color},
+    image_set => vars->{image_set},
+    last_time => vars->{last_time},
+    hourMean => vars->{hourMean},
+    tempMode_status => vars->{tempMode_status},
+    tempMode_color => vars->{tempMode_color},
+    alert_message => $password_info{update_message},  
+    alert_class => $password_info{alert_class}  
+  };
 };
 
 ###############################################################################
